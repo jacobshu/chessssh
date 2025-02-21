@@ -1,7 +1,12 @@
 package main
 
-import game "github.com/jacobshu/chessssh/internal"
+import (
+	"fmt"
 
-func initialModel() Game {
-	return Game.NewGame()
+	game "github.com/jacobshu/chessssh/internal"
+)
+
+func main() {
+	g := game.Game{}
+	fmt.Println(g.String(true))
 }
