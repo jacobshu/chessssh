@@ -13,26 +13,401 @@ var (
 	ErrInvalidMove = errors.New("invalid move for piece\n")
 )
 
-const (
-	whitePawn   = "♟"
-	whiteRook   = "♜"
-	whiteKnight = "♞"
-	whiteBishop = "♝"
-	whiteKing   = "♚"
-	whiteQueen  = "♛"
+type BoxPart int
 
-	blackPawn   = "♙"
-	blackRook   = "♖"
-	blackKnight = "♘"
-	blackBishop = "♗"
-	blackKing   = "♔"
-	blackQueen  = "♕"
+const (
+	TopLeft BoxPart = iota
+	TopIntersection
+	TopRight
+	MidLeft
+	MidIntersection
+	MidRight
+	BottomLeft
+	BottomIntersection
+	BottomRight
+	Horizontal
+	Vertical
 )
+
+var boxGlyphs = map[BoxPart]string{
+	TopLeft:            "┌",
+	TopIntersection:    "┬",
+	TopRight:           "┐",
+	MidLeft:            "├",
+	MidIntersection:    "┼",
+	MidRight:           "┤",
+	BottomLeft:         "└",
+	BottomIntersection: "┴",
+	BottomRight:        "┘",
+	Horizontal:         "─",
+	Vertical:           "│",
+}
+
+func (b BoxPart) String() string {
+	return boxGlyphs[b]
+}
+
+type PieceType int
+
+const (
+	WhitePawn PieceType = iota
+	WhiteKnight
+	WhiteBishop
+	WhiteRook
+	WhiteQueen
+	WhiteKing
+
+	BlackPawn
+	BlackKnight
+	BlackBishop
+	BlackRook
+	BlackQueen
+	BlackKing
+)
+
+var pieceName = map[PieceType]string{
+	WhitePawn:   "",
+	WhiteKnight: "N",
+	WhiteBishop: "B",
+	WhiteRook:   "R",
+	WhiteQueen:  "Q",
+	WhiteKing:   "K",
+	BlackPawn:   "",
+	BlackKnight: "N",
+	BlackBishop: "B",
+	BlackRook:   "R",
+	BlackQueen:  "Q",
+	BlackKing:   "K",
+}
+
+var pieceGlyphs = map[PieceType]string{
+	WhitePawn:   "♟",
+	WhiteRook:   "♜",
+	WhiteKnight: "♞",
+	WhiteBishop: "♝",
+	WhiteKing:   "♚",
+	WhiteQueen:  "♛",
+
+	BlackPawn:   "♙",
+	BlackRook:   "♖",
+	BlackKnight: "♘",
+	BlackBishop: "♗",
+	BlackKing:   "♔",
+	BlackQueen:  "♕",
+}
+
+func (p PieceType) Notation() string {
+	return pieceName[p]
+}
+
+func (p PieceType) String() string {
+	return pieceGlyphs[p]
+}
 
 type Game struct {
 	Board   [8][8]Tile
 	Pieces  [32]Piece
 	Players []Player
+}
+
+func NewGame() Game {
+	pcs := [32]Piece{
+		{
+			IsWhite:    true,
+			Glyph:      WhiteRook.String(),
+			Position:   Position{Rank: Rank1, File: FileH},
+			Type:       WhiteRook,
+			Notation:   WhiteRook.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhiteKnight.String(),
+			Position:   Position{Rank: Rank1, File: FileG},
+			Type:       WhiteKnight,
+			Notation:   WhiteKnight.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhiteBishop.String(),
+			Position:   Position{Rank: Rank1, File: FileF},
+			Type:       WhiteBishop,
+			Notation:   WhiteBishop.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhiteKing.String(),
+			Position:   Position{Rank: Rank1, File: FileE},
+			Type:       WhiteKing,
+			Notation:   WhiteKing.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhiteQueen.String(),
+			Position:   Position{Rank: Rank1, File: FileD},
+			Type:       WhiteQueen,
+			Notation:   WhiteQueen.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhiteBishop.String(),
+			Position:   Position{Rank: Rank1, File: FileC},
+			Type:       WhiteBishop,
+			Notation:   WhiteBishop.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhiteKnight.String(),
+			Position:   Position{Rank: Rank1, File: FileB},
+			Type:       WhiteKnight,
+			Notation:   WhiteKnight.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhiteRook.String(),
+			Position:   Position{Rank: Rank1, File: FileA},
+			Type:       WhiteRook,
+			Notation:   WhiteRook.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhitePawn.String(),
+			Position:   Position{Rank: Rank2, File: FileH},
+			Type:       WhitePawn,
+			Notation:   WhitePawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhitePawn.String(),
+			Position:   Position{Rank: Rank2, File: FileH},
+			Type:       WhitePawn,
+			Notation:   WhitePawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhitePawn.String(),
+			Position:   Position{Rank: Rank2, File: FileH},
+			Type:       WhitePawn,
+			Notation:   WhitePawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhitePawn.String(),
+			Position:   Position{Rank: Rank2, File: FileH},
+			Type:       WhitePawn,
+			Notation:   WhitePawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhitePawn.String(),
+			Position:   Position{Rank: Rank2, File: FileH},
+			Type:       WhitePawn,
+			Notation:   WhitePawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhitePawn.String(),
+			Position:   Position{Rank: Rank2, File: FileH},
+			Type:       WhitePawn,
+			Notation:   WhitePawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhitePawn.String(),
+			Position:   Position{Rank: Rank2, File: FileH},
+			Type:       WhitePawn,
+			Notation:   WhitePawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    true,
+			Glyph:      WhitePawn.String(),
+			Position:   Position{Rank: Rank2, File: FileH},
+			Type:       WhitePawn,
+			Notation:   WhitePawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackRook.String(),
+			Position:   Position{Rank: Rank8, File: FileH},
+			Type:       BlackRook,
+			Notation:   BlackRook.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackKnight.String(),
+			Position:   Position{Rank: Rank8, File: FileG},
+			Type:       BlackKnight,
+			Notation:   BlackKnight.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackBishop.String(),
+			Position:   Position{Rank: Rank8, File: FileF},
+			Type:       BlackBishop,
+			Notation:   BlackBishop.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackKing.String(),
+			Position:   Position{Rank: Rank8, File: FileE},
+			Type:       BlackKing,
+			Notation:   BlackKing.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackQueen.String(),
+			Position:   Position{Rank: Rank8, File: FileD},
+			Type:       BlackQueen,
+			Notation:   BlackQueen.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackBishop.String(),
+			Position:   Position{Rank: Rank8, File: FileC},
+			Type:       BlackBishop,
+			Notation:   BlackBishop.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackKnight.String(),
+			Position:   Position{Rank: Rank8, File: FileB},
+			Type:       BlackKnight,
+			Notation:   BlackKnight.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackRook.String(),
+			Position:   Position{Rank: Rank8, File: FileA},
+			Type:       BlackRook,
+			Notation:   BlackRook.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackPawn.String(),
+			Position:   Position{Rank: Rank7, File: FileH},
+			Type:       BlackPawn,
+			Notation:   BlackPawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackPawn.String(),
+			Position:   Position{Rank: Rank7, File: FileH},
+			Type:       BlackPawn,
+			Notation:   BlackPawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackPawn.String(),
+			Position:   Position{Rank: Rank7, File: FileH},
+			Type:       BlackPawn,
+			Notation:   BlackPawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackPawn.String(),
+			Position:   Position{Rank: Rank7, File: FileH},
+			Type:       BlackPawn,
+			Notation:   BlackPawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackPawn.String(),
+			Position:   Position{Rank: Rank7, File: FileH},
+			Type:       BlackPawn,
+			Notation:   BlackPawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackPawn.String(),
+			Position:   Position{Rank: Rank7, File: FileH},
+			Type:       BlackPawn,
+			Notation:   BlackPawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackPawn.String(),
+			Position:   Position{Rank: Rank7, File: FileH},
+			Type:       BlackPawn,
+			Notation:   BlackPawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+		{
+			IsWhite:    false,
+			Glyph:      BlackPawn.String(),
+			Position:   Position{Rank: Rank7, File: FileH},
+			Type:       BlackPawn,
+			Notation:   BlackPawn.Notation(),
+			IsCaptured: false,
+			HasMoved:   false,
+		},
+	}
+
+	g := Game{
+		Board:  [8][8]Tile{},
+		Pieces: pcs,
+	}
+
+	return g
 }
 
 func (g Game) String(asWhite bool) string {
@@ -77,7 +452,7 @@ func (g Game) String(asWhite bool) string {
 		b.WriteString("\n|")
 		b.WriteString(strings.Repeat("   |", tilesAcross))
 		b.WriteString("\n|")
-		b.WriteString(strings.Repeat(fmt.Sprintf(" %s |", whitePawn), tilesAcross))
+		b.WriteString(strings.Repeat(fmt.Sprintf(" %s |", WhitePawn), tilesAcross))
 		b.WriteString("\n|")
 		for f := 0; f < len(files); f++ {
 			b.WriteString(color.HiBlackString("%s%s ", files[f], ranks[r]))
@@ -98,16 +473,59 @@ type Player struct {
 type Tile struct {
 	Position   Position
 	IsOccupied bool
+	IsDark     bool
 	Occupant   *Piece
+}
+
+func NewTile(p Position, o *Piece) Tile {
+	t := Tile{
+		Position: p,
+	}
+
+	if o != nil {
+		t.IsOccupied = true
+		t.Occupant = o
+	} else {
+		t.IsOccupied = false
+	}
+
+	isDark := true
+	if (p.File%2 == 0 && p.Rank%2 == 1) || (p.File%2 == 1 && p.Rank%2 == 0) {
+		isDark = false
+	}
+
+	t.IsDark = isDark
+	return t
+}
+
+func (t Tile) View() string {
+	var s strings.Builder
+
+	black := color.New(color.BgGreen)
+	var q string
+	if t.IsDark {
+		q = black.Sprintf(" ")
+	} else {
+		q = " "
+	}
+
+	s.WriteString(strings.Repeat(q, 3))
+	s.WriteString(q)
+	s.WriteString(black.Sprintf(t.Occupant.Glyph))
+	s.WriteString(q)
+	s.WriteString(strings.Repeat(q, 3))
+
+	return s.String()
 }
 
 type Piece struct {
 	IsWhite    bool
-	Glyphs     []string
+	Glyph      string
 	Position   Position
-	Value      int
+	Type       PieceType
 	Notation   string
 	IsCaptured bool
+	HasMoved   bool
 }
 
 type PieceMove interface {
@@ -199,11 +617,6 @@ func (p Position) ToH(step int) Position {
 	}
 }
 
-type Pawn struct {
-	Piece
-	HasMoved bool
-}
-
 //	A      B      C      D      E      F      G      H
 //
 // 8 (0,0)  (1,0)  (2,0)  (3,0)  (4,0)  (5,0)  (6,0)  (7,0)
@@ -214,7 +627,7 @@ type Pawn struct {
 // 3 (0,5)  (1,5)  (2,5)  (3,5)  (4,5)  (5,5)  (6,5)  (7,5)
 // 2 (0,6)  (1,6)  (2,6)  (3,6)  (4,6)  (5,6)  (6,6)  (7,6)
 // 1 (0,7)  (1,7)  (2,7)  (3,7)  (4,7)  (5,7)  (6,7)  (7,7)
-func (p *Pawn) GetMoves(g *Game) []Position {
+func GetPawnMoves(p Piece) []Position {
 	var moves = []Position{}
 
 	var attackToA, attackToH, forward, forwardTwo Position
@@ -237,12 +650,4 @@ func (p *Pawn) GetMoves(g *Game) []Position {
 		moves = append(moves, forward, forwardTwo)
 	}
 	return moves
-}
-
-func NewGame() Game {
-	g := Game{
-		Board: [8][8]Tile{},
-	}
-
-	return g
 }
