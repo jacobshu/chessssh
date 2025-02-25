@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fatih/color"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 )
 
 var (
@@ -402,15 +403,6 @@ func NewGame() Game {
 		},
 	}
 
-	g := Game{
-		Board:  [8][8]Tile{},
-		Pieces: pcs,
-	}
-
-	return g
-}
-
-func (g Game) String(asWhite bool) string {
 	var ranks = [8]Rank{
 		Rank1,
 		Rank2,
@@ -432,37 +424,28 @@ func (g Game) String(asWhite bool) string {
 		FileG,
 		FileH,
 	}
-
-	tilesAcross := 8
-	tileWidth := 3
-	var b strings.Builder
-
-	b.WriteString(strings.Repeat("-", tilesAcross*(tileWidth+1)))
-	if asWhite {
-		for i, j := 0, len(ranks)-1; i < j; i, j = i+1, j-1 {
-			ranks[i], ranks[j] = ranks[j], ranks[i]
+	var b [8][8]Tile
+	for i, r := range ranks {
+		row := [8]Tile{}
+		for j, f := range files {
+			for _, p := range pcs {
+				pos := Position{Rank: r, File: f}
+				if p.Position == pos {
+					row[j] = NewTile(pos, &p)
+				} else {
+					row[j] = NewTile(pos, nil)
+				}
+			}
 		}
-	} else {
-		for i, j := 0, len(files)-1; i < j; i, j = i+1, j-1 {
-			files[i], files[j] = files[j], files[i]
-		}
+		b[i] = row
 	}
 
-	for r := 0; r < len(ranks); r++ {
-		b.WriteString("\n|")
-		b.WriteString(strings.Repeat("   |", tilesAcross))
-		b.WriteString("\n|")
-		b.WriteString(strings.Repeat(fmt.Sprintf(" %s |", WhitePawn), tilesAcross))
-		b.WriteString("\n|")
-		for f := 0; f < len(files); f++ {
-			b.WriteString(color.HiBlackString("%s%s ", files[f], ranks[r]))
-			b.WriteString("|")
-		}
-		b.WriteString("\n")
-		b.WriteString(strings.Repeat("-", tilesAcross*(tileWidth+1)))
+	g := Game{
+		Board:  b,
+		Pieces: pcs,
 	}
 
-	return b.String()
+	return g
 }
 
 type Player struct {
@@ -471,10 +454,12 @@ type Player struct {
 }
 
 type Tile struct {
-	Position   Position
-	IsOccupied bool
-	IsDark     bool
-	Occupant   *Piece
+	Position        Position
+	IsOccupied      bool
+	IsDark          bool
+	IsPotentialMove bool
+	IsSelected      bool
+	Occupant        *Piece
 }
 
 func NewTile(p Position, o *Piece) Tile {
@@ -498,24 +483,34 @@ func NewTile(p Position, o *Piece) Tile {
 	return t
 }
 
-func (t Tile) View() string {
-	var s strings.Builder
+func (t Tile) Render() string {
+	log.Debug("render tile", "pos", t.Position)
 
-	black := color.New(color.BgGreen)
-	var q string
+	var c lipgloss.ANSIColor
 	if t.IsDark {
-		q = black.Sprintf(" ")
+		c = lipgloss.ANSIColor(235)
+	} else if t.IsPotentialMove {
+		c = lipgloss.ANSIColor(42)
+	} else if t.IsSelected {
+		c = lipgloss.ANSIColor(102)
+	}
+	style := lipgloss.NewStyle().Background(c).Foreground(lipgloss.ANSIColor(243))
+	pieceStyle := style.Foreground(lipgloss.ANSIColor(7))
+
+	top := style.Render("   ")
+	var mid string
+	if t.IsOccupied {
+		s := style.Render(" ")
+		p := pieceStyle.Render(t.Occupant.Glyph)
+		mid = s + p + s
 	} else {
-		q = " "
+		mid = style.Render("   ")
 	}
 
-	s.WriteString(strings.Repeat(q, 3))
-	s.WriteString(q)
-	s.WriteString(black.Sprintf(t.Occupant.Glyph))
-	s.WriteString(q)
-	s.WriteString(strings.Repeat(q, 3))
+	bot := style.Render("   ")
 
-	return s.String()
+	final := lipgloss.JoinVertical(lipgloss.Left, top, mid, bot)
+	return final
 }
 
 type Piece struct {

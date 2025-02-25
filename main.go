@@ -6,19 +6,31 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/timer"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	game "github.com/jacobshu/chessssh/internal"
 )
 
 func main() {
-	//logger := log.New(os.Stdout)
-	logfilePath := "debug.log" // os.Getenv("BUBBLETEA_LOG")
-	if _, err := tea.LogToFile(logfilePath, "simple"); err != nil {
-		log.Fatal(err)
+	logfilePath := "debug.log"                                                     // os.Getenv("BUBBLETEA_LOG")
+	f, err := os.OpenFile(logfilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600) //nolint:gomnd
+	if err != nil {
+		fmt.Printf("error opening file for logging: %v", err)
 	}
+	log.SetOutput(f)
+	log.SetLevel(log.DebugLevel)
+	// if _, err := tea.LogToFile(logfilePath, "simple"); err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	p := tea.NewProgram(model{Game: game.NewGame()})
+	g := game.NewGame()
+
+	p := tea.NewProgram(model{
+		Game:  g,
+		timer: timer.New(time.Minute * 10),
+	})
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}
@@ -28,13 +40,14 @@ func main() {
 // program, so often it's a struct. For this simple example, however, all
 // we'll need is a simple integer.
 type model struct {
-	Game game.Game
-	Time time.Duration
+	Game  game.Game
+	timer timer.Model
 }
 
 // Init optionally returns an initial command we should run. In this case we
 // want to start the timer.
 func (m model) Init() tea.Cmd {
+	log.Info("starting...")
 	return tick
 }
 
@@ -42,6 +55,8 @@ func (m model) Init() tea.Cmd {
 // message and send back an updated model accordingly. You can also return
 // a command, which is a function that performs I/O and returns a message.
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -50,18 +65,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+z":
 			return m, tea.Suspend
 		}
+	case timer.TickMsg:
+		m.timer, cmd = m.timer.Update(msg)
+		cmds = append(cmds, cmd)
 	}
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
-// View returns a string based on data in the model. That string which will be
-// rendered to the terminal.
 func (m model) View() string {
 	var s strings.Builder
 	for i := 0; i < len(m.Game.Board); i++ {
+		row := []string{}
 		for j := 0; j < len(m.Game.Board[i]); j++ {
-			s.WriteString(m.Game.Board[i][j].View())
+			row = append(row, m.Game.Board[i][j].Render())
 		}
+		s.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, row...))
+		s.WriteString("\n")
 	}
 	return s.String()
 }
