@@ -36,7 +36,7 @@ func NewTile(p Position, o *Piece) Tile {
 }
 
 func (t Tile) Render() string {
-	log.Debug("render tile", "pos", t.Position)
+	log.Debug("render tile", "pos", t.Position, "occ", t.Occupant)
 
 	var c lipgloss.ANSIColor
 	if t.IsDark {
@@ -59,8 +59,8 @@ func (t Tile) Render() string {
 		mid = style.Render("   ")
 	}
 
-	bot := style.Render("   ")
+	// bot := style.Render("   ")
 
-	final := lipgloss.JoinVertical(lipgloss.Left, top, mid, bot)
+	final := lipgloss.JoinVertical(lipgloss.Left, top, mid) //, bot)
 	return final
 }

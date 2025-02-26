@@ -93,7 +93,7 @@ func NewGame() Game {
 		{
 			IsWhite:    true,
 			Glyph:      WhitePawn.String(),
-			Position:   Position{Rank: Rank2, File: FileH},
+			Position:   Position{Rank: Rank2, File: FileA},
 			Type:       WhitePawn,
 			Notation:   WhitePawn.Notation(),
 			IsCaptured: false,
@@ -102,7 +102,7 @@ func NewGame() Game {
 		{
 			IsWhite:    true,
 			Glyph:      WhitePawn.String(),
-			Position:   Position{Rank: Rank2, File: FileH},
+			Position:   Position{Rank: Rank2, File: FileB},
 			Type:       WhitePawn,
 			Notation:   WhitePawn.Notation(),
 			IsCaptured: false,
@@ -111,7 +111,7 @@ func NewGame() Game {
 		{
 			IsWhite:    true,
 			Glyph:      WhitePawn.String(),
-			Position:   Position{Rank: Rank2, File: FileH},
+			Position:   Position{Rank: Rank2, File: FileC},
 			Type:       WhitePawn,
 			Notation:   WhitePawn.Notation(),
 			IsCaptured: false,
@@ -120,7 +120,7 @@ func NewGame() Game {
 		{
 			IsWhite:    true,
 			Glyph:      WhitePawn.String(),
-			Position:   Position{Rank: Rank2, File: FileH},
+			Position:   Position{Rank: Rank2, File: FileD},
 			Type:       WhitePawn,
 			Notation:   WhitePawn.Notation(),
 			IsCaptured: false,
@@ -129,7 +129,7 @@ func NewGame() Game {
 		{
 			IsWhite:    true,
 			Glyph:      WhitePawn.String(),
-			Position:   Position{Rank: Rank2, File: FileH},
+			Position:   Position{Rank: Rank2, File: FileE},
 			Type:       WhitePawn,
 			Notation:   WhitePawn.Notation(),
 			IsCaptured: false,
@@ -138,7 +138,7 @@ func NewGame() Game {
 		{
 			IsWhite:    true,
 			Glyph:      WhitePawn.String(),
-			Position:   Position{Rank: Rank2, File: FileH},
+			Position:   Position{Rank: Rank2, File: FileF},
 			Type:       WhitePawn,
 			Notation:   WhitePawn.Notation(),
 			IsCaptured: false,
@@ -147,7 +147,7 @@ func NewGame() Game {
 		{
 			IsWhite:    true,
 			Glyph:      WhitePawn.String(),
-			Position:   Position{Rank: Rank2, File: FileH},
+			Position:   Position{Rank: Rank2, File: FileG},
 			Type:       WhitePawn,
 			Notation:   WhitePawn.Notation(),
 			IsCaptured: false,
@@ -237,7 +237,7 @@ func NewGame() Game {
 		{
 			IsWhite:    false,
 			Glyph:      BlackPawn.String(),
-			Position:   Position{Rank: Rank7, File: FileH},
+			Position:   Position{Rank: Rank7, File: FileA},
 			Type:       BlackPawn,
 			Notation:   BlackPawn.Notation(),
 			IsCaptured: false,
@@ -246,7 +246,7 @@ func NewGame() Game {
 		{
 			IsWhite:    false,
 			Glyph:      BlackPawn.String(),
-			Position:   Position{Rank: Rank7, File: FileH},
+			Position:   Position{Rank: Rank7, File: FileB},
 			Type:       BlackPawn,
 			Notation:   BlackPawn.Notation(),
 			IsCaptured: false,
@@ -255,7 +255,7 @@ func NewGame() Game {
 		{
 			IsWhite:    false,
 			Glyph:      BlackPawn.String(),
-			Position:   Position{Rank: Rank7, File: FileH},
+			Position:   Position{Rank: Rank7, File: FileC},
 			Type:       BlackPawn,
 			Notation:   BlackPawn.Notation(),
 			IsCaptured: false,
@@ -264,7 +264,7 @@ func NewGame() Game {
 		{
 			IsWhite:    false,
 			Glyph:      BlackPawn.String(),
-			Position:   Position{Rank: Rank7, File: FileH},
+			Position:   Position{Rank: Rank7, File: FileD},
 			Type:       BlackPawn,
 			Notation:   BlackPawn.Notation(),
 			IsCaptured: false,
@@ -273,7 +273,7 @@ func NewGame() Game {
 		{
 			IsWhite:    false,
 			Glyph:      BlackPawn.String(),
-			Position:   Position{Rank: Rank7, File: FileH},
+			Position:   Position{Rank: Rank7, File: FileE},
 			Type:       BlackPawn,
 			Notation:   BlackPawn.Notation(),
 			IsCaptured: false,
@@ -282,7 +282,7 @@ func NewGame() Game {
 		{
 			IsWhite:    false,
 			Glyph:      BlackPawn.String(),
-			Position:   Position{Rank: Rank7, File: FileH},
+			Position:   Position{Rank: Rank7, File: FileF},
 			Type:       BlackPawn,
 			Notation:   BlackPawn.Notation(),
 			IsCaptured: false,
@@ -291,7 +291,7 @@ func NewGame() Game {
 		{
 			IsWhite:    false,
 			Glyph:      BlackPawn.String(),
-			Position:   Position{Rank: Rank7, File: FileH},
+			Position:   Position{Rank: Rank7, File: FileG},
 			Type:       BlackPawn,
 			Notation:   BlackPawn.Notation(),
 			IsCaptured: false,
@@ -329,18 +329,30 @@ func NewGame() Game {
 		FileG,
 		FileH,
 	}
+
 	var b [8][8]Tile
 	for i, r := range ranks {
 		row := [8]Tile{}
 		for j, f := range files {
+
+			pos := Position{Rank: r, File: f}
+			found := false
+
 			for _, p := range pcs {
-				pos := Position{Rank: r, File: f}
 				if p.Position == pos {
+					found = true
 					row[j] = NewTile(pos, &p)
-				} else {
-					row[j] = NewTile(pos, nil)
+				}
+
+				if found {
+					break
 				}
 			}
+
+			if !found {
+				row[j] = NewTile(pos, nil)
+			}
+
 		}
 		b[i] = row
 	}

@@ -1,5 +1,7 @@
 package game
 
+import "fmt"
+
 type PieceType int
 
 const (
@@ -71,4 +73,8 @@ type PieceMove interface {
 	GetMoves(*Game) []Position
 	IsValidMove(Position, string) bool
 	GetPosition() Position
+}
+
+func (p Piece) String() string {
+	return fmt.Sprintf("%s@%s", p.Type.Notation(), p.Position.String())
 }
