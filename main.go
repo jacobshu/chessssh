@@ -28,9 +28,12 @@ func main() {
 	g := game.NewGame()
 
 	p := tea.NewProgram(model{
-		Game:  g,
-		timer: timer.New(time.Minute * 10),
-	})
+		Game:       g,
+		timer:      timer.New(time.Minute * 10),
+		padding:    1,
+		tileWidth:  3,
+		tileHeight: 2,
+	}, tea.WithMouseAllMotion(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}
@@ -40,24 +43,30 @@ func main() {
 // program, so often it's a struct. For this simple example, however, all
 // we'll need is a simple integer.
 type model struct {
-	Game  game.Game
-	timer timer.Model
+	Game       game.Game
+	timer      timer.Model
+	mouseEvent tea.MouseEvent
+	info       string
+	termWidth  int
+	termHeight int
+	padding    int
+	tileWidth  int
+	tileHeight int
 }
 
-// Init optionally returns an initial command we should run. In this case we
-// want to start the timer.
 func (m model) Init() tea.Cmd {
 	log.Info("starting...")
 	return tick
 }
 
-// Update is called when messages are received. The idea is that you inspect the
-// message and send back an updated model accordingly. You can also return
-// a command, which is a function that performs I/O and returns a message.
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.termWidth = msg.Width
+		m.termHeight = msg.Height
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -68,11 +77,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case timer.TickMsg:
 		m.timer, cmd = m.timer.Update(msg)
 		cmds = append(cmds, cmd)
+	case tea.MouseMsg:
+		m.info = fmt.Sprintf("(%d, %d) %s", msg.X, msg.Y, tea.MouseEvent(msg))
+		return m, nil
 	}
+
 	return m, tea.Batch(cmds...)
 }
 
 func (m model) View() string {
+	boardStyle := lipgloss.NewStyle().
+		PaddingTop(m.padding).
+		PaddingLeft(m.padding).
+		PaddingRight(m.padding).
+		Align(lipgloss.Center).
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.ANSIColor(245))
+
 	var s strings.Builder
 	for i := 0; i < len(m.Game.Board); i++ {
 		row := []string{}
@@ -82,11 +103,14 @@ func (m model) View() string {
 		s.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, row...))
 		s.WriteString("\n")
 	}
-	return s.String()
+	return lipgloss.Place(
+		m.termWidth,
+		m.termHeight,
+		lipgloss.Center,
+		lipgloss.Center,
+		boardStyle.Render(s.String())+"\n"+m.info)
 }
 
-// Messages are events that we respond to in our Update function. This
-// particular one indicates that the timer has ticked.
 type tickMsg time.Time
 
 func tick() tea.Msg {

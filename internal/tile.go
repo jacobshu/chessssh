@@ -14,7 +14,7 @@ type Tile struct {
 	Occupant        *Piece
 }
 
-func NewTile(p Position, o *Piece) Tile {
+func NewTile(w, h int, p Position, o *Piece) Tile {
 	t := Tile{
 		Position: p,
 	}
