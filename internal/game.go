@@ -11,7 +11,7 @@ var (
 )
 
 type Game struct {
-	Board   [8][8]Tile
+	Board   [8][8]*Tile
 	Pieces  [32]Piece
 	Players []Player
 }
@@ -330,9 +330,9 @@ func NewGame() Game {
 		FileH,
 	}
 
-	var b [8][8]Tile
+	var b [8][8]*Tile
 	for i, r := range ranks {
-		row := [8]Tile{}
+		row := [8]*Tile{}
 		for j, f := range files {
 
 			pos := Position{Rank: r, File: f}
@@ -341,7 +341,8 @@ func NewGame() Game {
 			for _, p := range pcs {
 				if p.Position == pos {
 					found = true
-					row[j] = NewTile(pos, &p)
+					nt := NewTile(pos, &p)
+					row[j] = nt
 				}
 
 				if found {

@@ -20,7 +20,7 @@ func main() {
 		fmt.Printf("error opening file for logging: %v", err)
 	}
 	log.SetOutput(f)
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.ErrorLevel)
 	// if _, err := tea.LogToFile(logfilePath, "simple"); err != nil {
 	// 	log.Fatal(err)
 	// }
@@ -28,7 +28,7 @@ func main() {
 	g := game.NewGame()
 
 	p := tea.NewProgram(model{
-		Game:       g,
+		Game:       &g,
 		timer:      timer.New(time.Minute * 10),
 		padding:    1,
 		tileWidth:  3,
@@ -43,15 +43,17 @@ func main() {
 // program, so often it's a struct. For this simple example, however, all
 // we'll need is a simple integer.
 type model struct {
-	Game       game.Game
-	timer      timer.Model
-	mouseEvent tea.MouseEvent
-	info       string
-	termWidth  int
-	termHeight int
-	padding    int
-	tileWidth  int
-	tileHeight int
+	Game         *game.Game
+	timer        timer.Model
+	mouseEvent   tea.MouseEvent
+	info         string
+	termWidth    int
+	termHeight   int
+	padding      int
+	tileWidth    int
+	tileHeight   int
+	boardOffsetX int
+	boardOffsetY int
 }
 
 func (m model) Init() tea.Cmd {
@@ -66,6 +68,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.termWidth = msg.Width
 		m.termHeight = msg.Height
+		m.boardOffsetX = (msg.Width - (8 * m.tileWidth)) / 2
+		m.boardOffsetY = (msg.Height-(8*m.tileHeight))/2 - 1
 		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -78,7 +82,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.timer, cmd = m.timer.Update(msg)
 		cmds = append(cmds, cmd)
 	case tea.MouseMsg:
-		m.info = fmt.Sprintf("(%d, %d) %s", msg.X, msg.Y, tea.MouseEvent(msg))
+		m.info = fmt.Sprintf("(%d, %d) %s\n", msg.X, msg.Y, tea.MouseEvent(msg))
+		m.info = fmt.Sprintf("%s(%d, %d) board offset\n", m.info, m.boardOffsetX, m.boardOffsetY)
+		m.SetHoveredTile(msg.X, msg.Y)
 		return m, nil
 	}
 
@@ -87,11 +93,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	boardStyle := lipgloss.NewStyle().
-		PaddingTop(m.padding).
-		PaddingLeft(m.padding).
-		PaddingRight(m.padding).
 		Align(lipgloss.Center).
-		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.ANSIColor(245))
 
 	var s strings.Builder
@@ -109,6 +111,23 @@ func (m model) View() string {
 		lipgloss.Center,
 		lipgloss.Center,
 		boardStyle.Render(s.String())+"\n"+m.info)
+}
+
+func (m model) SetHoveredTile(x, y int) {
+	log.Debug("SetHoveredTile", "x", x, "y", y)
+	for i, r := range m.Game.Board {
+		for j, f := range r {
+			txl := m.boardOffsetX + (j * 3)
+			txh := txl + 2
+			tyl := m.boardOffsetY + (i * 2) - 2 // -2 for info lines
+			tyh := tyl + 1
+			if txl <= x && txh >= x && tyl <= y && tyh >= y {
+				f.IsHovered = true
+			} else {
+				f.IsHovered = false
+			}
+		}
+	}
 }
 
 type tickMsg time.Time

@@ -11,10 +11,13 @@ type Tile struct {
 	IsDark          bool
 	IsPotentialMove bool
 	IsSelected      bool
+	IsHovered       bool
 	Occupant        *Piece
+	OffsetX         int
+	OffsetY         int
 }
 
-func NewTile(w, h int, p Position, o *Piece) Tile {
+func NewTile(p Position, o *Piece) *Tile {
 	t := Tile{
 		Position: p,
 	}
@@ -32,7 +35,17 @@ func NewTile(w, h int, p Position, o *Piece) Tile {
 	}
 
 	t.IsDark = isDark
-	return t
+	return &t
+}
+
+func (t Tile) Info() string {
+	var d string
+	if t.IsDark {
+		d = "X"
+	} else {
+		d = " "
+	}
+	return t.Position.String() + d
 }
 
 func (t Tile) Render() string {
@@ -41,15 +54,21 @@ func (t Tile) Render() string {
 	var c lipgloss.ANSIColor
 	if t.IsDark {
 		c = lipgloss.ANSIColor(235)
-	} else if t.IsPotentialMove {
+	}
+
+	if t.IsPotentialMove {
 		c = lipgloss.ANSIColor(42)
 	} else if t.IsSelected {
 		c = lipgloss.ANSIColor(102)
+	} else if t.IsHovered {
+		c = lipgloss.ANSIColor(5)
 	}
+
 	style := lipgloss.NewStyle().Background(c).Foreground(lipgloss.ANSIColor(243))
 	pieceStyle := style.Foreground(lipgloss.ANSIColor(7))
 
-	top := style.Render("   ")
+	// top := style.Render("   ")
+	top := style.Render(t.Info())
 	var mid string
 	if t.IsOccupied {
 		s := style.Render(" ")
