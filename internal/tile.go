@@ -53,15 +53,15 @@ func (t Tile) Render() string {
 
 	var c lipgloss.ANSIColor
 	if t.IsDark {
-		c = lipgloss.ANSIColor(235)
+		c = lipgloss.ANSIColor(8)
 	}
 
 	if t.IsPotentialMove {
 		c = lipgloss.ANSIColor(42)
 	} else if t.IsSelected {
-		c = lipgloss.ANSIColor(102)
+		c = lipgloss.ANSIColor(6)
 	} else if t.IsHovered {
-		c = lipgloss.ANSIColor(5)
+		c = lipgloss.ANSIColor(2)
 	}
 
 	style := lipgloss.NewStyle().Background(c).Foreground(lipgloss.ANSIColor(243))

@@ -30,6 +30,7 @@ func main() {
 	p := tea.NewProgram(model{
 		Game:       &g,
 		timer:      timer.New(time.Minute * 10),
+		boardSize:  8,
 		padding:    1,
 		tileWidth:  3,
 		tileHeight: 2,
@@ -52,6 +53,7 @@ type model struct {
 	padding      int
 	tileWidth    int
 	tileHeight   int
+	boardSize    int
 	boardOffsetX int
 	boardOffsetY int
 }
@@ -68,8 +70,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.termWidth = msg.Width
 		m.termHeight = msg.Height
-		m.boardOffsetX = (msg.Width - (8 * m.tileWidth)) / 2
-		m.boardOffsetY = (msg.Height-(8*m.tileHeight))/2 - 1
+		m.boardOffsetX = (msg.Width - (m.boardSize * m.tileWidth)) / 2
+		m.boardOffsetY = (msg.Height - (m.boardSize * m.tileHeight)) / 2
 		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -84,6 +86,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.MouseMsg:
 		m.info = fmt.Sprintf("(%d, %d) %s\n", msg.X, msg.Y, tea.MouseEvent(msg))
 		m.info = fmt.Sprintf("%s(%d, %d) board offset\n", m.info, m.boardOffsetX, m.boardOffsetY)
+		if msg.Action == tea.MouseActionRelease {
+			m.SetSelectedTile(msg.X, msg.Y)
+		}
 		m.SetHoveredTile(msg.X, msg.Y)
 		return m, nil
 	}
@@ -97,9 +102,9 @@ func (m model) View() string {
 		BorderForeground(lipgloss.ANSIColor(245))
 
 	var s strings.Builder
-	for i := 0; i < len(m.Game.Board); i++ {
+	for i := range m.Game.Board {
 		row := []string{}
-		for j := 0; j < len(m.Game.Board[i]); j++ {
+		for j := range m.Game.Board[i] {
 			row = append(row, m.Game.Board[i][j].Render())
 		}
 		s.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, row...))
@@ -125,6 +130,23 @@ func (m model) SetHoveredTile(x, y int) {
 				f.IsHovered = true
 			} else {
 				f.IsHovered = false
+			}
+		}
+	}
+}
+
+func (m model) SetSelectedTile(x, y int) {
+	log.Debug("SetHoveredTile", "x", x, "y", y)
+	for i, r := range m.Game.Board {
+		for j, f := range r {
+			txl := m.boardOffsetX + (j * 3)
+			txh := txl + 2
+			tyl := m.boardOffsetY + (i * 2) - 2 // -2 for info lines
+			tyh := tyl + 1
+			if txl <= x && txh >= x && tyl <= y && tyh >= y {
+				f.IsSelected = true
+			} else {
+				f.IsSelected = false
 			}
 		}
 	}
