@@ -136,7 +136,7 @@ func (m model) SetHoveredTile(x, y int) {
 }
 
 func (m model) SetSelectedTile(x, y int) {
-	log.Debug("SetHoveredTile", "x", x, "y", y)
+	log.Debug("SetSelectedTile", "x", x, "y", y)
 	for i, r := range m.Game.Board {
 		for j, f := range r {
 			txl := m.boardOffsetX + (j * 3)

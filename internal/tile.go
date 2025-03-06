@@ -15,6 +15,7 @@ type Tile struct {
 	Occupant        *Piece
 	OffsetX         int
 	OffsetY         int
+	Moves           []Position
 }
 
 func NewTile(p Position, o *Piece) *Tile {
@@ -39,13 +40,25 @@ func NewTile(p Position, o *Piece) *Tile {
 }
 
 func (t Tile) Info() string {
-	var d string
-	if t.IsDark {
-		d = "X"
+	var i string
+	if t.Position.Rank == Rank1 && t.Position.File == FileA {
+		i = t.Position.String()
+	} else if t.Position.Rank == Rank1 {
+		i = t.Position.File.String() + " "
+	} else if t.Position.File == FileA {
+		i = t.Position.Rank.String() + " "
 	} else {
-		d = " "
+		i = "  "
 	}
-	return t.Position.String() + d
+
+	return i + " "
+}
+
+func (t Tile) SetSelected() {
+	t.IsSelected = true
+	if t.IsOccupied {
+		// t.Occupant.GetMoves()
+	}
 }
 
 func (t Tile) Render() string {
@@ -53,7 +66,9 @@ func (t Tile) Render() string {
 
 	var c lipgloss.ANSIColor
 	if t.IsDark {
-		c = lipgloss.ANSIColor(8)
+		c = lipgloss.ANSIColor(235)
+	} else {
+		c = lipgloss.ANSIColor(247)
 	}
 
 	if t.IsPotentialMove {
@@ -64,15 +79,21 @@ func (t Tile) Render() string {
 		c = lipgloss.ANSIColor(2)
 	}
 
-	style := lipgloss.NewStyle().Background(c).Foreground(lipgloss.ANSIColor(243))
-	pieceStyle := style.Foreground(lipgloss.ANSIColor(7))
+	style := lipgloss.NewStyle().Background(c).Foreground(lipgloss.ANSIColor(240))
+	bStyle := style.Foreground(lipgloss.ANSIColor(243))
+	wStyle := style.Foreground(lipgloss.ANSIColor(15))
 
 	// top := style.Render("   ")
 	top := style.Render(t.Info())
 	var mid string
 	if t.IsOccupied {
 		s := style.Render(" ")
-		p := pieceStyle.Render(t.Occupant.Glyph)
+		var p string
+		if t.Occupant.IsWhite {
+			p = wStyle.Render(t.Occupant.Glyph)
+		} else {
+			p = bStyle.Render(t.Occupant.Glyph)
+		}
 		mid = s + p + s
 	} else {
 		mid = style.Render("   ")
